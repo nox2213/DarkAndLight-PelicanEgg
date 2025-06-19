@@ -4,7 +4,7 @@
         "version": "PLCN_v1",
         "update_url": null
     },
-    "exported_at": "2025-06-19T10:09:52+00:00",
+    "exported_at": "2025-06-19T10:27:14+00:00",
     "name": "Dark and Light",
     "author": "traeutlein.n@gmail.com",
     "uuid": "",
@@ -37,7 +37,7 @@
             "name": "ActivateCluster",
             "description": "Set this Variable to Use The Map Travel Features\/ The Cluster Travel if you want",
             "env_variable": "ACTIVATE_CLUSTER",
-            "default_value": "true",
+            "default_value": "false",
             "user_viewable": true,
             "user_editable": true,
             "rules": [
@@ -74,11 +74,11 @@
         {
             "sort": 23,
             "name": "CLUSTER_DIR_OVERRIDE",
-            "description": "The Path for the Cluster Transfer and Uploads, here is the Place for the Mount Path. I Mounted the Server Transfer under \/home\/Cluster. It is preferred to use this, but you can change this. There can be rroblems with the read\/write rights, maybe an additional chmod is required on the host maschine",
+            "description": "The Path for the Cluster Transfer and Uploads, here is the Place for the Mount Path. I Mounted the Server Transfer under \/home\/Cluster. It is preferred to use this, but you can change this. There can be problems with the read\/write permissions of the mount, maybe an additional adjustment of the permissions is required on the host maschine.",
             "env_variable": "CLUSTER_DIR_OVERRIDE",
             "default_value": "\/home\/Cluster",
             "user_viewable": true,
-            "user_editable": false,
+            "user_editable": true,
             "rules": [
                 "required",
                 "string"
@@ -89,7 +89,7 @@
             "name": "clusterid",
             "description": "If you want to use Server Transfer Features of DNL you have to specify a Unique Cluster ID",
             "env_variable": "CLUSTERID",
-            "default_value": "noxworld1",
+            "default_value": "pelicancluster1",
             "user_viewable": true,
             "user_editable": true,
             "rules": [
@@ -142,9 +142,9 @@
         {
             "sort": 13,
             "name": "MESSAGE_OF_THE_DAY",
-            "description": "Loginmessage of the Server",
+            "description": "Login message of the Server",
             "env_variable": "MESSAGE_OF_THE_DAY",
-            "default_value": "By Nox",
+            "default_value": "A Pelican Server",
             "user_viewable": true,
             "user_editable": true,
             "rules": [
@@ -156,9 +156,9 @@
         {
             "sort": 9,
             "name": "MOD_LIST",
-            "description": "List of the Mod\u00b4s uses, seperated by comma. Format Mod1,Mod2 usw. To use Mods you have to copy the Mod folder AND the .mod file from your PC to the Mods Folder in the Container",
+            "description": "List of the Mod\u00b4s uses, seperated by comma. Format Mod1,Mod2 usw. To use Mods you have to copy the Mod folder AND the .mod file from your PC to the Mods Folder in the Container. This Variable only writes the Mods in the GameUserSettings for you.",
             "env_variable": "MOD_LIST",
-            "default_value": "1409051903,1632601681,1500324735,1415231480,1414781245,1403344375,1403443780,1402919630,1403351437,1407110526",
+            "default_value": "",
             "user_viewable": true,
             "user_editable": true,
             "rules": [
@@ -250,7 +250,7 @@
             "name": "Server Name",
             "description": "Dark and Light server name",
             "env_variable": "SESSION_NAME",
-            "default_value": "Noxworld",
+            "default_value": "A Pelican Server",
             "user_viewable": true,
             "user_editable": true,
             "rules": [

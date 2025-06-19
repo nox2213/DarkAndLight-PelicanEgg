@@ -1,4 +1,4 @@
-**# Dark and Light Pelican Egg
+# Dark and Light Pelican Egg
 
 This repository contains a Pelican panel egg for running a **Dark and Light** dedicated server. The egg is fully featured and supports server clustering as well as Steam Workshop mods.
 

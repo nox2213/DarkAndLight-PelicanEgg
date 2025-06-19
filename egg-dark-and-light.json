@@ -1,0 +1,343 @@
+{
+    "_comment": "DO NOT EDIT: FILE GENERATED AUTOMATICALLY BY PANEL",
+    "meta": {
+        "version": "PLCN_v1",
+        "update_url": null
+    },
+    "exported_at": "2025-06-19T10:09:52+00:00",
+    "name": "Dark and Light",
+    "author": "traeutlein.n@gmail.com",
+    "uuid": "",
+    "description": "Dark and Light is a vast sandbox survival RPG set in a world dominated by powerful elemental forces. Find your way in a meticulously crafted world, featuring breathtaking landscapes, a wide variety of mythical creatures, and limitless possibility to craft, build, and unlock dozens of powerful weapons, spells, and skills.",
+    "tags": [],
+    "features": [
+        "steam_disk_space"
+    ],
+    "docker_images": {
+        "Wine": "ghcr.io\/parkervcp\/yolks:wine_latest"
+    },
+    "file_denylist": [],
+    "startup": "bash \/home\/container\/StartupLoader.sh && wine64 .\/DNL\/Binaries\/Win64\/DNLServer.exe \"${SERVER_MAP}?listen?SessionName=${SESSION_NAME}?ServerAdminPassword=${DNL_ADMIN_PASSWORD}?MultiHome=0.0.0.0?Port=${SERVER_PORT}?QueryPort=${QUERY_PORT}?MaxPlayers=${MAX_PLAYERS}${SERVER_ARGS}\" $( [ \"$ACTIVATE_CLUSTER\" = \"true\" ] && echo \"-clusterid=${CLUSTERID} -ClusterDirOverride=${CLUSTER_DIR_OVERRIDE}\" ) -NoTransferFromFiltering -servergamelog -servergamelogincludetribelogs -ServerRCONOutputTribeLogs -NotifyAdminCommandsInChat ${SERVER_FLAGS} -useallavailablecores -usecache -nosteamclient -game -server -log\n",
+    "config": {
+        "files": "{}",
+        "startup": "{\r\n    \"done\": \"Waiting commands for 127.0.0.1:\"\r\n}",
+        "logs": "{}",
+        "stop": "^C"
+    },
+    "scripts": {
+        "installation": {
+            "script": "#!\/bin\/bash\r\n# steamcmd Base Installation Script\r\n#\r\n# Server Files: \/mnt\/server\r\n# Image to install with is 'ghcr.io\/parkervcp\/installers:debian'\r\n\r\n\r\n# Install packages. Default packages below are not required if using our existing install image thus speeding up the install process.\r\n#apt -y update\r\n#apt -y --no-install-recommends install curl lib32gcc-s1 ca-certificates\r\n\r\n\r\nwget https:\/\/github.com\/gorcon\/rcon-cli\/releases\/latest\/download\/rcon-linux-amd64 -O \/usr\/local\/bin\/rcon \r\nchmod +x \/usr\/local\/bin\/rcon\r\n\r\n\r\n## just in case someone removed the defaults.\r\nif [[ \"${STEAM_USER}\" == \"\" ]] || [[ \"${STEAM_PASS}\" == \"\" ]]; then\r\n    echo -e \"steam user is not set.\\n\"\r\n    echo -e \"Using anonymous user.\\n\"\r\n    STEAM_USER=anonymous\r\n    STEAM_PASS=\"\"\r\n    STEAM_AUTH=\"\"\r\nelse\r\n    echo -e \"user set to ${STEAM_USER}\"\r\nfi\r\n\r\n## download and install steamcmd\r\ncd \/tmp\r\nmkdir -p \/mnt\/server\/steamcmd\r\ncurl -sSL -o steamcmd.tar.gz https:\/\/steamcdn-a.akamaihd.net\/client\/installer\/steamcmd_linux.tar.gz\r\ntar -xzvf steamcmd.tar.gz -C \/mnt\/server\/steamcmd\r\nmkdir -p \/mnt\/server\/steamapps # Fix steamcmd disk write error when this folder is missing\r\ncd \/mnt\/server\/steamcmd\r\n\r\n# SteamCMD fails otherwise for some reason, even running as root.\r\n# This is changed at the end of the install process anyways.\r\nchown -R root:root \/mnt\r\nexport HOME=\/mnt\/server\r\n\r\n## install game using steamcmd\r\n.\/steamcmd.sh +force_install_dir \/mnt\/server +login ${STEAM_USER} ${STEAM_PASS} ${STEAM_AUTH} $( [[ \"${WINDOWS_INSTALL}\" == \"1\" ]] && printf %s '+@sSteamCmdForcePlatformType windows' ) +app_update ${SRCDS_APPID} $( [[ -z ${SRCDS_BETAID} ]] || printf %s \"-beta ${SRCDS_BETAID}\" ) $( [[ -z ${SRCDS_BETAPASS} ]] || printf %s \"-betapassword ${SRCDS_BETAPASS}\" ) ${INSTALL_FLAGS} validate +quit ## other flags may be needed depending on install. looking at you cs 1.6\r\n\r\n## set up 32 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk32\r\ncp -v linux32\/steamclient.so ..\/.steam\/sdk32\/steamclient.so\r\n\r\n## set up 64 bit libraries\r\nmkdir -p \/mnt\/server\/.steam\/sdk64\r\ncp -v linux64\/steamclient.so ..\/.steam\/sdk64\/steamclient.so\r\n\r\n## add below your custom commands if needed\r\n\r\n\r\n## DLL-Dateien in das Spielverzeichnis kopieren\r\nmkdir -p \/mnt\/server\/DNL\/Binaries\/Win64\r\ncp -v \/mnt\/server\/steamclient64.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\ncp -v \/mnt\/server\/steamclient.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\ncp -v \/mnt\/server\/tier0_s64.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\ncp -v \/mnt\/server\/tier0_s.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\ncp -v \/mnt\/server\/vstdlib_s64.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\ncp -v \/mnt\/server\/vstdlib_s.dll \/mnt\/server\/DNL\/Binaries\/Win64\/\r\necho \"Moved DLL\u00b4s to game folder!\"\r\n\r\n## ModLoader.sh herunterladen und ausf\u00fchrbar machen\r\ncurl -L https:\/\/raw.githubusercontent.com\/nox2213\/DarkAndLight-PelicanEgg\/refs\/heads\/main\/StartupLoader.sh -o \/mnt\/server\/StartupLoader.sh \r\nchmod +x \/mnt\/server\/StartupLoader.sh \r\n\r\nmkdir -p \/mnt\/server\/DNL\/Saved\/Config\/WindowsServer \r\ncurl -L https:\/\/raw.githubusercontent.com\/nox2213\/DarkAndLight-PelicanEgg\/refs\/heads\/main\/GameUserSettings.ini -o \/mnt\/server\/DNL\/Saved\/Config\/WindowsServer\/GameUserSettings.ini\r\n\r\n\r\n## install end\r\necho \"-----------------------------------------\"\r\necho \"Installation completed...\"\r\necho \"-----------------------------------------\"",
+            "container": "ghcr.io\/parkervcp\/installers:debian",
+            "entrypoint": "bash"
+        }
+    },
+    "variables": [
+        {
+            "sort": 14,
+            "name": "ActivateCluster",
+            "description": "Set this Variable to Use The Map Travel Features\/ The Cluster Travel if you want",
+            "env_variable": "ACTIVATE_CLUSTER",
+            "default_value": "true",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "in:true,false"
+            ]
+        },
+        {
+            "sort": 10,
+            "name": "ADMIN_IDS",
+            "description": "Steam ID\u00b4s of the Users, that have always Admin Rights, seperated by comma",
+            "env_variable": "ADMIN_IDS",
+            "default_value": "0",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string"
+            ]
+        },
+        {
+            "sort": 2,
+            "name": "Auto-update server",
+            "description": "This is to enable auto-updating for servers.\r\n\r\nDefault is 0. Set to 1 to update",
+            "env_variable": "AUTO_UPDATE",
+            "default_value": "1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "boolean"
+            ]
+        },
+        {
+            "sort": 23,
+            "name": "CLUSTER_DIR_OVERRIDE",
+            "description": "The Path for the Cluster Transfer and Uploads, here is the Place for the Mount Path. I Mounted the Server Transfer under \/home\/Cluster. It is preferred to use this, but you can change this. There can be rroblems with the read\/write rights, maybe an additional chmod is required on the host maschine",
+            "env_variable": "CLUSTER_DIR_OVERRIDE",
+            "default_value": "\/home\/Cluster",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string"
+            ]
+        },
+        {
+            "sort": 15,
+            "name": "clusterid",
+            "description": "If you want to use Server Transfer Features of DNL you have to specify a Unique Cluster ID",
+            "env_variable": "CLUSTERID",
+            "default_value": "noxworld1",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:20"
+            ]
+        },
+        {
+            "sort": 6,
+            "name": "Admin Password",
+            "description": "If specified, players must provide this password (via the in-game console) to gain access to administrator commands on the server.",
+            "env_variable": "DNL_ADMIN_PASSWORD",
+            "default_value": "PleaseChangeMe",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "alpha_dash",
+                "between:1,100"
+            ]
+        },
+        {
+            "sort": 5,
+            "name": "Server Password",
+            "description": "If specified, players must provide this password to join the server.",
+            "env_variable": "DNL_PASSWORD",
+            "default_value": "",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "alpha_dash",
+                "between:1,100"
+            ]
+        },
+        {
+            "sort": 8,
+            "name": "Max Players",
+            "description": "Specifies the maximum amount of players able to join the server.",
+            "env_variable": "MAX_PLAYERS",
+            "default_value": "127",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "numeric"
+            ]
+        },
+        {
+            "sort": 13,
+            "name": "MESSAGE_OF_THE_DAY",
+            "description": "Loginmessage of the Server",
+            "env_variable": "MESSAGE_OF_THE_DAY",
+            "default_value": "By Nox",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string",
+                "max:80"
+            ]
+        },
+        {
+            "sort": 9,
+            "name": "MOD_LIST",
+            "description": "List of the Mod\u00b4s uses, seperated by comma. Format Mod1,Mod2 usw. To use Mods you have to copy the Mod folder AND the .mod file from your PC to the Mods Folder in the Container",
+            "env_variable": "MOD_LIST",
+            "default_value": "1409051903,1632601681,1500324735,1415231480,1414781245,1403344375,1403443780,1402919630,1403351437,1407110526",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ]
+        },
+        {
+            "sort": 7,
+            "name": "Query Port",
+            "description": "DNL query port used by steam server browser and DNL client server browser.",
+            "env_variable": "QUERY_PORT",
+            "default_value": "27015",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "numeric"
+            ]
+        },
+        {
+            "sort": 21,
+            "name": "RCON_ENABLED",
+            "description": "",
+            "env_variable": "RCON_ENABLED",
+            "default_value": "True",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "in:True"
+            ]
+        },
+        {
+            "sort": 22,
+            "name": "RCON_PORT",
+            "description": "",
+            "env_variable": "RCON_PORT",
+            "default_value": "27020",
+            "user_viewable": true,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "numeric",
+                "in:27020"
+            ]
+        },
+        {
+            "sort": 11,
+            "name": "SERVER_ARGS",
+            "description": "Additional arguments for the Server, the format is without Spaces and connected through a ?",
+            "env_variable": "SERVER_ARGS",
+            "default_value": "?ForceFlyerExplosives=true?AllowCrateSpawnsOnTopOfStructures=True",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ]
+        },
+        {
+            "sort": 12,
+            "name": "SERVER_FLAGS",
+            "description": "Additional Flags for the Server to use on Startup. use this format -flag1 -flag2 etc.",
+            "env_variable": "SERVER_FLAGS",
+            "default_value": "-ForceAllowCaveFlyers -insecure ",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "nullable",
+                "string"
+            ]
+        },
+        {
+            "sort": 4,
+            "name": "Server Map",
+            "description": "Available Maps: DNL_ALL, theshard.",
+            "env_variable": "SERVER_MAP",
+            "default_value": "\/Game\/TheShard\/Maps\/TheShard",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "in:\/Game\/TheShard\/Maps\/TheShard,\/Game\/DNL\/Maps\/CapeOfSacredPath\/DNL_ALL"
+            ]
+        },
+        {
+            "sort": 3,
+            "name": "Server Name",
+            "description": "Dark and Light server name",
+            "env_variable": "SESSION_NAME",
+            "default_value": "Noxworld",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:128"
+            ]
+        },
+        {
+            "sort": 1,
+            "name": "App ID",
+            "description": "Dark and Light steam app id for auto updates",
+            "env_variable": "SRCDS_APPID",
+            "default_value": "630230",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "integer:630230"
+            ]
+        },
+        {
+            "sort": 16,
+            "name": "WINDOWS_INSTALL",
+            "description": "",
+            "env_variable": "WINDOWS_INSTALL",
+            "default_value": "1",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required"
+            ]
+        },
+        {
+            "sort": 17,
+            "name": "WINEARCH",
+            "description": "",
+            "env_variable": "WINEARCH",
+            "default_value": "win64",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "in:win64"
+            ]
+        },
+        {
+            "sort": 18,
+            "name": "WINEDEBUG",
+            "description": "",
+            "env_variable": "WINEDEBUG",
+            "default_value": "-all,err+all",
+            "user_viewable": true,
+            "user_editable": true,
+            "rules": [
+                "required",
+                "string",
+                "max:20"
+            ]
+        },
+        {
+            "sort": 19,
+            "name": "WINEPATH",
+            "description": "",
+            "env_variable": "WINEPATH",
+            "default_value": "\/home\/container",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string",
+                "max:20"
+            ]
+        },
+        {
+            "sort": 20,
+            "name": "WINETRICKS_RUN",
+            "description": "",
+            "env_variable": "WINETRICKS_RUN",
+            "default_value": "vcrun2019 corefonts",
+            "user_viewable": false,
+            "user_editable": false,
+            "rules": [
+                "required",
+                "string",
+                "in:vcrun2019 corefonts"
+            ]
+        }
+    ]
+}
